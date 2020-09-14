@@ -1,8 +1,4 @@
-from component import EnumValue
-from component import Bits
-from component import Reg
-from component import Peripheral
-import component
+from component import *
 
 if __name__ == "__main__":
     a = EnumValue(3,"0x00:11223")

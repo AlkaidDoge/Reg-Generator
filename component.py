@@ -1,5 +1,7 @@
 from enum import Enum
 import re
+import logging
+logging.basicConfig(level=logging.INFO)
 
 typeList=[
     'RO'    , # w: no effect,                                                       r: no effect
@@ -39,9 +41,6 @@ def RegType(text:str,line:int=-1):
     else:
         return typeList[n]
 
-import logging
-logging.basicConfig(level=logging.INFO)
-
 class EnumValue:
     value=int()
     description=str()
@@ -61,6 +60,7 @@ class Bits:
     regType='RW'
     resetValue=int()
     description=str()
+    enumList=list()
     def __init__(self,line:str,text:str):
         self.offset,
         self.width,
@@ -86,11 +86,14 @@ class Bits:
             assert (1==0,"Syntax error at {}".format(line))
         logging.info(str(s))
         return s
+    def add_enum(self,e:EnumValue):
+        self.enumList.append(e)
 class Reg:
     offset=int()
     name = str()
     width = int()
     description=str()
+    bitsList = list()
     def __init__(self,line:int,text:str):
         self.offset,
         self.name,
@@ -103,10 +106,14 @@ class Reg:
         s[2]=int(s[2])
         logging.info(str(s))
         return s
+    def add_Bits(self,e:Bits):
+        self.bitsList.append(e)
+
 class Peripheral:
     baseAdr = int()
     name = str()
     description = str()
+    regList =list()
     def __init__(self,line:int,text:str):
         self.baseAdr,
         self.name,
@@ -116,6 +123,9 @@ class Peripheral:
         s[0]=int(s[0],16)
         logging.info(str(s))
         return s
+    def add_reg(self,e:Reg):
+        self.regList.append(e)
+
 # 以多个symbol作为分隔符，拆分出长度为maxlen的list(大于等于minlen时默认补'')
 # 少于minlen时报错
 def myspilt(line:int,text:str,symbol:str,minlen:int,maxlen:int,default=''):

@@ -19,4 +19,4 @@ if __name__ == "__main__":
 
     result = go_split(s, symbol)
     print(result)
-    print(hex(0x12))
+    print(int('0x12_12',16))
