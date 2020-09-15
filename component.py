@@ -1,3 +1,4 @@
+# encoding:utf-8
 from enum import Enum
 import re
 import logging
@@ -72,7 +73,7 @@ class Bits:
     def __resolve(self,line:str,text:str):
         s = myspilt(line,text, ':.', 4,5)
         condition = s[0][0] == "[" and s[0][-1] == "]"
-        assert (condition, "Miss parameter at {}".format(line))
+        assert condition, "Miss parameter at {}".format(line)
         s[2] = RegType(s[2], line)
         s[3] = int(s[3], 16)
         s[0] = s[0][1:-1].split("-")
@@ -83,7 +84,7 @@ class Bits:
         elif len(s[0])==1:
             s[0] = int(s[0][0])
         else:
-            assert (1==0,"Syntax error at {}".format(line))
+            assert False,"Syntax error at {}".format(line)
         logging.info(str(s))
         return s
     def add_enum(self,e:EnumValue):
@@ -131,7 +132,7 @@ class Peripheral:
 def myspilt(line:int,text:str,symbol:str,minlen:int,maxlen:int,default=''):
     symbol = "[" + symbol + "]+"
     mylist=re.split(symbol,text,maxsplit=maxlen-1)
-    assert (len(mylist)>=minlen,"Miss parameter at {}".format(line))
+    assert len(mylist)>=minlen,"Miss parameter at {}".format(line)
     while(len(mylist)<maxlen):
         mylist.append(default)
     return mylist

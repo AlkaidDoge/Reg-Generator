@@ -20,3 +20,7 @@ if __name__ == "__main__":
     result = go_split(s, symbol)
     print(result)
     print(int('0x12_12',16))
+    a=(dict(zip([1,2,3],[0,-1,2,3])))
+
+    print(' \t12222222\n'.strip(' \t\r\f\v\n'))
+    print('13213')
