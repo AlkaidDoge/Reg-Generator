@@ -24,3 +24,10 @@ if __name__ == "__main__":
 
     print(' \t12222222\n'.strip(' \t\r\f\v\n'))
     print('13213')
+    print('wwwwwwww')
+    a=12345678
+    for i in range(100):
+        a=a*a
+        a=(a>>16) & 0xffff_ffff
+        print(a)
+
