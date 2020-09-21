@@ -35,13 +35,9 @@ typeList=[
     'W1P'   , # w: 1/0 pulse/no effect on matching bit,                             r: no effect
     'W0P'     # w: 0/1 pulse/no effect on matching bit,                             r: no effect
      ]
-def RegType(text:str,line:int=-1):
-    try:
-        n=typeList.index(text.upper())
-    except :
-        print("Type error at",line)
-    else:
-        return typeList[n]
+def RegType(text:str):
+    n=typeList.index(text.upper())
+    return typeList[n]
 
 def check_type(obj,T:str):
     t_obj = type(obj).__name__
@@ -52,6 +48,7 @@ def check_type(obj,T:str):
 
 def _callback():
     pass
+
 class Node:
     def __init__(self,rank:int=-1):
         self._root=None
@@ -108,8 +105,15 @@ class Node:
     def get_rank(self):
         return self._rank
 
-
-
+    def recall(self):
+        rootList = []
+        e=self
+        for i in range(self._rank):
+            root = e.get_root()
+            rootList.insert(0,root)
+            if root:
+                e=root
+        return rootList
 
 class EnumValue(Node):
     def __init__(self, value, name: str, description: str):
@@ -117,72 +121,78 @@ class EnumValue(Node):
         self.value = value
         self.name = name
         self.description = description
+        self.__resolve()
 
-    # def __resolve(self,line:int,text:str):
-    #     s=myspilt(line,text,":",1,2)
-    #     s[0]=int(s[0],16)
-    #     logging.info(str(s))
-    #     return s
+    def __resolve(self):
+        self.value = HWvalue(remove_space(str(self.value)))
+        self.name = remove_space(self.name)
+        self.description = remove_space(self.description)
+
+    def __str__(self):
+        rootList=map(lambda x:x.name if x else None,self.recall())
+        return '{}.{}.{}.{}({})'. \
+            format(*rootList, \
+                   self.name,self.value)
+
 class Bits(Node):
-    def __init__(self,section,width:int,name:str,regType:str,resetValue,description:str):
+    def __init__(self,section:str,width:str,name:str,regType:str,resetValue:str,description:str):
         Node.__init__(self,2)
-        # self.enumvalue=[]
         self.section=section
         self.width=width
         self.name=name
         self.regType=regType
         self.resetValue=resetValue
         self.description = description
+        self.__resolve()
 
-    # def __resolve(self,line:str,text:str):
-    #     s = myspilt(line,text, ':.', 4,5)
-    #     condition = s[0][0] == "[" and s[0][-1] == "]"
-    #     assert condition, "Miss parameter at {}".format(line)
-    #     s[2] = RegType(s[2], line)
-    #     s[3] = int(s[3], 16)
-    #     s[0] = s[0][1:-1].split("-")
-    #     if len(s[0]) == 2:
-    #         a, b = map(lambda x: int(x), s[0])
-    #         s.insert(1, a - b + 1)
-    #         s[0] = b
-    #     elif len(s[0])==1:
-    #         s[0] = int(s[0][0])
-    #     else:
-    #         assert False,"Syntax error at {}".format(line)
-    #     logging.info(str(s))
-    #     return s
-    # def add_enum(self,e:EnumValue):
-    #     self.enumList.append(e)
+    def __resolve(self):
+        self.section = remove_space(self.section)
+        self.width = int(remove_space(str(self.width)))
+        self.name = remove_space(self.name)
+        self.regType = RegType(remove_space(self.regType))
+        self.resetValue = HWvalue(remove_space(str(self.resetValue)))
+        self.description = remove_space(self.description)
+
+    def __str__(self):
+        rootList=map(lambda x:x.name if x else None,self.recall())
+        return '{}.{}.{}({}:{})'. \
+            format(*rootList, \
+                   self.name,self.section,self.resetValue)
+
 class Reg(Node):
-    def __init__(self,offset,name:str,width,description:str):
+    def __init__(self,offset:str,name:str,width:str,description:str):
         Node.__init__(self,1)
-        # self.bits=[]
         self.offset=offset
         self.name=name
         self.width=width
         self.description=description
+        self.__resolve()
 
-    # def __resolve(self, line: str, text: str):
-    #     s = myspilt(line, text, ':.', 3, 4)
-    #     s[0]=int(s[0],16)
-    #     s[2]=int(s[2])
-    #     logging.info(str(s))
-    #     return s
-    # def add_Bits(self,e:Bits):
-    #     self.bitsList.append(e)
+    def __resolve(self):
+        self.width = int(remove_space(str(self.width)))
+        self.offset=HWvalue(remove_space(str(self.offset)))
+        self.name=remove_space(self.name)
+        self.description=remove_space(self.description)
+
+    def __str__(self):
+        rootList=map(lambda x:x.name if x else None,self.recall())
+        return '{}.{}({}:{} bit)'.format(*rootList,self.name,self.offset,self.width)
+
 
 class Peripheral(Node):
     def __init__(self,baseAdr:str,name:str,description:str):
         Node.__init__(self,0)
-        # self.reg=[]
         self.baseAdr=baseAdr
         self.name=name
         self.description=description
+        self.__resolve()
+    def __resolve(self):
+        self.baseAdr=HWvalue(remove_space(str(self.baseAdr)))
+        self.name = remove_space(self.name)
+        self.description = remove_space(self.description)
 
-    def __resolve(self,baseAdr:str,name:str,description:str):
-        baseAdr=remove_space(baseAdr)
-        name = remove_space(name)
-        description = remove_space(description)
+    def __str__(self):
+        return '{}({})'.format(self.name,self.baseAdr)
 
 
 class HWvalue:
@@ -191,7 +201,6 @@ class HWvalue:
         self.width=width
         self.__errorcallback = errorcallback
         self.val=self.__desolve(sValue)
-        print(self)
 
     def __str__(self):
         return str(hex(self.val))
@@ -214,31 +223,32 @@ class HWvalue:
             width=int(items[0]) if items[0]!='' else self.width
             radix=HWvalue.__radix_dict[items[1]]
             val=int(items[2],radix)
-            self.__is_match_width(val,width)
+            # self.__is_match_width(val,width)
             return val
 
         # 0X格式
         obj = re.match(r'0x(\w+)', sValue)
         if obj:
             val = int(obj.group(1), 16)
-            self.__is_match_width(val, self.width)
+            # self.__is_match_width(val, self.width)
             return val
 
         # 10进制数字模式
         if is_int(sValue):
             val = int(sValue, 10)
-            self.__is_match_width(val,self.width)
+            # self.__is_match_width(val,self.width)
             return val
 
         # 错误格式
         raise Exception('格式错误，无效数值')
 
-    def __is_match_width(self,val,width):
-        if width != self.width or val > (2 ** self.width) - 1:
-            self.__errorcallback()
-            raise Exception('位宽不匹配')
-        else:
-            return True
+    # 考虑去掉，将语法检查和逻辑检查分开
+    # def __is_match_width(self,val,width):
+    #     if width != self.width or val > (2 ** self.width) - 1:
+    #         self.__errorcallback()
+    #         raise Exception('位宽不匹配')
+    #     else:
+    #         return True
 
     def toBin(self):
         text = bin(self.val)[2:].zfill(self.width)
@@ -265,7 +275,7 @@ class HWvalue:
         return v
 
     # 按长度倒叙以指定字符分割字符串
-    def __split_by_len(self,text,lenth,sep:str='_'):
+    def __split_by_len(self,text,lenth,separator:str='_'):
         l = len(text)
         if l<=lenth:
             return text
@@ -273,15 +283,8 @@ class HWvalue:
             mod=len(text)%lenth
             t1=text[0:mod]
             t2=re.findall(r'.{'+str(lenth)+'}', text[mod:])
-            t = t1 + sep + sep.join(t2)
+            t = t1 + separator + separator.join(t2) if t1!='' else separator.join(t2)
             return t
-
-
-
-
-
-
-
 
 def remove_space(s:str):
     s.strip(' \t\r\f\v\n')

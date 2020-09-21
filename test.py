@@ -27,5 +27,6 @@ if __name__ == "__main__":
     b='b'
     print(b)
     s={'1':"a",'2':"b",'b':1}
-    print(re.findall('.{4}','1234'))
+    print('{} {} {}'.format(*[1,2],3))
+    print('123'[0:1])
 
