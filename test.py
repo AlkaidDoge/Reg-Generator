@@ -8,7 +8,8 @@ def go_split(s, symbol):
     result = re.split(symbol, s)
     # 去除空字符
     return [x for x in result if x]
-
+def _C():
+    print('cccccccccccc')
 
 if __name__ == "__main__":
     # 定义初始字符串
@@ -21,13 +22,10 @@ if __name__ == "__main__":
     print(result)
     print(int('0x12_12',16))
     a=(dict(zip([1,2,3],[0,-1,2,3])))
-
-    print(' \t12222222\n'.strip(' \t\r\f\v\n'))
-    print('13213')
-    print('wwwwwwww')
-    a=12345678
-    for i in range(100):
-        a=a*a
-        a=(a>>16) & 0xffff_ffff
-        print(a)
+    print(int('00_10',10))
+    print(hex(10))
+    b='b'
+    print(b)
+    s={'1':"a",'2':"b",'b':1}
+    print(re.findall('.{4}','1234'))
 

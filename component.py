@@ -2,6 +2,7 @@
 from enum import Enum
 import re
 import logging
+import math
 logging.basicConfig(level=logging.INFO)
 
 typeList=[
@@ -49,7 +50,8 @@ def check_type(obj,T:str):
                         format(t_obj, T))
     return None
 
-
+def _callback():
+    pass
 class Node:
     def __init__(self,rank:int=-1):
         self._root=None
@@ -170,22 +172,124 @@ class Reg(Node):
     #     self.bitsList.append(e)
 
 class Peripheral(Node):
-    def __init__(self,baseAdr,name:str,description:str):
+    def __init__(self,baseAdr:str,name:str,description:str):
         Node.__init__(self,0)
         # self.reg=[]
         self.baseAdr=baseAdr
         self.name=name
         self.description=description
 
+    def __resolve(self,baseAdr:str,name:str,description:str):
+        baseAdr=remove_space(baseAdr)
+        name = remove_space(name)
+        description = remove_space(description)
 
 
-    # def __resolve(self, line: str, text: str):
-    #     s = myspilt(line, text, ':.', 2, 3)
-    #     s[0]=int(s[0],16)
-    #     logging.info(str(s))
-    #     return s
-    # def add_reg(self,e:Reg):
-    #     self.regList.append(e)
+class HWvalue:
+    __radix_dict={'b':2,'o':8,'d':10,'h':16}
+    def __init__(self,sValue:str,width:int=32,*,errorcallback=_callback):
+        self.width=width
+        self.__errorcallback = errorcallback
+        self.val=self.__desolve(sValue)
+        print(self)
+
+    def __str__(self):
+        return str(hex(self.val))
+    def __int__(self):
+        return self.val
+
+    def __desolve(self,sValue:str):
+        def is_int(s):
+            try:
+                int(s)
+                return True
+            except ValueError:
+                return False
+        sValue=remove_space(sValue.lower())
+        # (\d)'[bodh]\d(可带下划线)格式
+        obj=re.match(r'(\d*)\'([bodh]){1}(\w+)',sValue)
+        if obj :
+            items=obj.groups()
+            # 未指明位宽的时候以给定位宽为准
+            width=int(items[0]) if items[0]!='' else self.width
+            radix=HWvalue.__radix_dict[items[1]]
+            val=int(items[2],radix)
+            self.__is_match_width(val,width)
+            return val
+
+        # 0X格式
+        obj = re.match(r'0x(\w+)', sValue)
+        if obj:
+            val = int(obj.group(1), 16)
+            self.__is_match_width(val, self.width)
+            return val
+
+        # 10进制数字模式
+        if is_int(sValue):
+            val = int(sValue, 10)
+            self.__is_match_width(val,self.width)
+            return val
+
+        # 错误格式
+        raise Exception('格式错误，无效数值')
+
+    def __is_match_width(self,val,width):
+        if width != self.width or val > (2 ** self.width) - 1:
+            self.__errorcallback()
+            raise Exception('位宽不匹配')
+        else:
+            return True
+
+    def toBin(self):
+        text = bin(self.val)[2:].zfill(self.width)
+        v = self.__split_by_len(text,4)
+        v = str(self.width)+'\'b'+v
+        return v
+
+    def toOct(self):
+        text = oct(self.val)[2:]
+        v = self.__split_by_len(text, 4)
+        v = str(self.width) + '\'o' + v
+        return v
+
+    def toDec(self):
+        text = str(self.val)
+        v = self.__split_by_len(text, 4)
+        v = str(self.width) + '\'d' + v
+        return v
+
+    def toHex(self):
+        text = hex(self.val)[2:]
+        v = self.__split_by_len(text,4)
+        v = str(self.width)+'\'h'+v
+        return v
+
+    # 按长度倒叙以指定字符分割字符串
+    def __split_by_len(self,text,lenth,sep:str='_'):
+        l = len(text)
+        if l<=lenth:
+            return text
+        else:
+            mod=len(text)%lenth
+            t1=text[0:mod]
+            t2=re.findall(r'.{'+str(lenth)+'}', text[mod:])
+            t = t1 + sep + sep.join(t2)
+            return t
+
+
+
+
+
+
+
+
+def remove_space(s:str):
+    s.strip(' \t\r\f\v\n')
+    return s
+
+
+
+
 
 # # 以多个symbol作为分隔符，拆分出长度为maxlen的list(大于等于minlen时默认补'')
 # # 少于minlen时报错
