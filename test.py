@@ -12,21 +12,9 @@ def _C():
     print('cccccccccccc')
 
 if __name__ == "__main__":
-    # 定义初始字符串
-    s = '12;;7.osjd;.jshdjdknx+'
-    s = "[2-1]:name:rw:0x00"
-    # 定义分隔符
-    symbol = ';:./+'
 
-    result = go_split(s, symbol)
-    print(result)
-    print(int('0x12_12',16))
-    a=(dict(zip([1,2,3],[0,-1,2,3])))
-    print(int('00_10',10))
-    print(hex(10))
-    b='b'
-    print(b)
-    s={'1':"a",'2':"b",'b':1}
-    print('{} {} {}'.format(*[1,2],3))
-    print('123'[0:1])
-
+    a={0:lambda x,y,z:'00'+str(x*y*z),1:10}
+    print(a[0](10,20,30))
+    print(10 in a)
+    a='123'+str(None)+'232321'
+    print(a.zfill(0))
